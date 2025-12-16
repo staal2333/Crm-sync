@@ -29,8 +29,8 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Professional",
     priceMonthly: 9.99,
     priceYearly: 99, // ~8.25/mo
-    stripePriceMonthly: "price_1SewtEFyB6BgsXQ0urEgr6hN",
-    stripePriceYearly: "price_1SewtzFyB6BgsXQ028jd0Xmo",
+    stripePriceMonthly: "price_1Sf0GZFyB6BgsXQ0K279LYTR",
+    stripePriceYearly: "price_1Sf0ICFyB6BgsXQ06U07uDYc",
     description: "For power users who need cloud sync.",
     features: [
       "Unlimited contacts",
@@ -49,8 +49,8 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Teams",
     priceMonthly: 29.99,
     priceYearly: 299,
-    stripePriceMonthly: "price_1SewvGFyB6BgsXQ079zbn4cm",
-    stripePriceYearly: "price_1SewvqFyB6BgsXQ0ctLLwzd9",
+    stripePriceMonthly: "price_1Sf0HEFyB6BgsXQ0VM2a6HnB",
+    stripePriceYearly: "price_1Sf0IYFyB6BgsXQ0YPHMBb1q",
     description: "Collaborate with your sales team.",
     features: [
       "Everything in Pro",
