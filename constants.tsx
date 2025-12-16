@@ -5,7 +5,7 @@ import {
 import { PricingTier, Feature, Testimonial, FAQItem } from "./types";
 
 export const STRIPE_PUBLIC_KEY = "pk_test_51Sew66CCA7zznCUOs81EWnAMc71NVWNa0FTLDd38V9Xj26XrTB3DtCb6IdcAfiSDj41wEc0f4fMcHGtd6KhuwZeq00jHwgenCm";
-export const API_URL = "https://crmsync-extension.onrender.com";
+export const API_URL = "https://crmsync-api.onrender.com";
 
 export const PRICING_TIERS: PricingTier[] = [
   {
@@ -29,6 +29,8 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Professional",
     priceMonthly: 9.99,
     priceYearly: 99, // ~8.25/mo
+    stripePriceMonthly: "price_1SewtEFyB6BgsXQ0urEgr6hN",
+    stripePriceYearly: "price_1SewtzFyB6BgsXQ028jd0Xmo",
     description: "For power users who need cloud sync.",
     features: [
       "Unlimited contacts",
@@ -47,6 +49,8 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Teams",
     priceMonthly: 29.99,
     priceYearly: 299,
+    stripePriceMonthly: "price_1SewvGFyB6BgsXQ079zbn4cm",
+    stripePriceYearly: "price_1SewvqFyB6BgsXQ0ctLLwzd9",
     description: "Collaborate with your sales team.",
     features: [
       "Everything in Pro",

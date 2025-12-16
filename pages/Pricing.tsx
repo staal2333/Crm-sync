@@ -26,9 +26,22 @@ export const Pricing: React.FC = () => {
       return;
     }
 
+    // Find the tier and get the correct price ID
+    const tier = PRICING_TIERS.find(t => t.id === tierId);
+    if (!tier) {
+      alert('Invalid subscription plan');
+      return;
+    }
+
+    const priceId = billingPeriod === 'yearly' ? tier.stripePriceYearly : tier.stripePriceMonthly;
+    if (!priceId) {
+      alert('Price not configured for this plan');
+      return;
+    }
+
     setLoadingTier(tierId);
     try {
-      const result = await createCheckoutSession(tierId, billingPeriod);
+      const result = await createCheckoutSession(priceId);
       
       if (result?.url) {
         window.location.href = result.url;

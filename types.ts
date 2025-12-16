@@ -5,6 +5,8 @@ export interface PricingTier {
   name: string;
   priceMonthly: number;
   priceYearly: number;
+  stripePriceMonthly?: string;
+  stripePriceYearly?: string;
   description: string;
   features: string[];
   isPopular?: boolean;
