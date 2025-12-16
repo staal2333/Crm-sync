@@ -30,7 +30,7 @@ export const authService = {
   },
 
   async register(name: string, email: string, password: string): Promise<AuthResponse> {
-    const res = await fetch(`${API_URL}/api/auth/signup`, { // Assumes /signup or /register based on typical render backends
+    const res = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
@@ -45,7 +45,7 @@ export const authService = {
   },
 
   async getProfile(token: string): Promise<User> {
-    const res = await fetch(`${API_URL}/api/user/profile`, { // Adjust endpoint as needed
+    const res = await fetch(`${API_URL}/api/auth/me`, {
       method: 'GET',
       headers: { 
         'Authorization': `Bearer ${token}`,
@@ -57,6 +57,7 @@ export const authService = {
       throw new Error('Failed to fetch profile');
     }
 
-    return res.json();
+    const data = await res.json();
+    return data.user || data;
   }
 };
