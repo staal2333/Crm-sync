@@ -37,13 +37,13 @@ export const createCheckoutSession = async (priceId: string): Promise<CheckoutRe
     });
 
     if (!response.ok) {
-      // If 401, the user needs to login. Handling this in the UI usually, but good to know.
-      if (response.status === 401) {
+      // If 401 or 403, the user needs to login
+      if (response.status === 401 || response.status === 403) {
          throw new Error("Unauthorized");
       }
-      console.warn("Backend unavailable or returned error. Falling back to demo success flow.");
-      // Fallback for demo purposes
-      return { url: window.location.origin + '/#/success' }; 
+      console.error("Backend returned error:", response.status);
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
     const data = await response.json();
