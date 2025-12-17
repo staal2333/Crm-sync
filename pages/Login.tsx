@@ -14,14 +14,36 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
 
   // Check if this is a login from the extension
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const source = urlParams.get('source');
-    const extId = urlParams.get('extensionId');
+    // Try to get params from both search (before hash) and hash (after hash)
+    // URL format: https://site.com?source=extension&extensionId=abc#/login
+    let urlParams = new URLSearchParams(window.location.search);
     
-    if (source === 'extension' && extId) {
+    // Debug logging
+    console.log('Full URL:', window.location.href);
+    console.log('Search params:', window.location.search);
+    console.log('Hash:', window.location.hash);
+    
+    let source = urlParams.get('source');
+    let extId = urlParams.get('extensionId');
+    
+    // If not found in search, check if they're in the hash
+    if (!source || !extId) {
+      const hashParts = window.location.hash.split('?');
+      if (hashParts.length > 1) {
+        urlParams = new URLSearchParams(hashParts[1]);
+        source = urlParams.get('source');
+        extId = urlParams.get('extensionId');
+      }
+    }
+    
+    console.log('Parsed params:', { source, extId });
+    
+    if (source === 'extension' && extId && extId !== 'null' && extId !== 'undefined') {
       setIsExtensionLogin(true);
       setExtensionId(extId);
-      console.log('🔌 Extension login detected, ID:', extId);
+      console.log('✅ Extension login detected, ID:', extId);
+    } else {
+      console.log('❌ Not an extension login or missing ID');
     }
   }, []);
 
@@ -50,6 +72,13 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
   const redirectToExtension = (authData: any) => {
     const { token, user } = authData;
     
+    // Validate extension ID
+    if (!extensionId || extensionId === 'null' || extensionId === 'undefined' || extensionId.length < 10) {
+      console.error('❌ Invalid extension ID:', extensionId);
+      setError('Invalid extension ID. Please try signing in from the extension again.');
+      return;
+    }
+    
     // Build callback URL with all auth data
     const params = new URLSearchParams({
       token: token,
@@ -63,6 +92,8 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
     const callbackUrl = `chrome-extension://${extensionId}/auth-callback.html?${params.toString()}`;
     
     console.log('🚀 Redirecting to extension:', callbackUrl);
+    console.log('Extension ID:', extensionId);
+    console.log('Auth data:', { email: user.email, tier: user.tier || user.plan || 'free' });
     
     // Small delay to show success message
     setTimeout(() => {
