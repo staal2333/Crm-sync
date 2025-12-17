@@ -38,12 +38,15 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
     
     console.log('Parsed params:', { source, extId });
     
-    if (source === 'extension' && extId && extId !== 'null' && extId !== 'undefined') {
+    // Clean up extension ID (trim and remove trailing slashes)
+    const cleanExtId = extId?.trim().replace(/\/+$/, '');
+    
+    if (source === 'extension' && cleanExtId && cleanExtId !== 'null' && cleanExtId !== 'undefined' && cleanExtId.length > 10) {
       setIsExtensionLogin(true);
-      setExtensionId(extId);
-      console.log('✅ Extension login detected, ID:', extId);
+      setExtensionId(cleanExtId);
+      console.log('✅ Extension login detected, ID:', cleanExtId);
     } else {
-      console.log('❌ Not an extension login or missing ID');
+      console.log('❌ Not an extension login or missing ID', { source, cleanExtId });
     }
   }, []);
 
