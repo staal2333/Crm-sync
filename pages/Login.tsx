@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { Button, LogoIcon } from '../components/Shared';
@@ -8,7 +8,22 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isExtensionLogin, setIsExtensionLogin] = useState(false);
+  const [extensionId, setExtensionId] = useState('');
   const { login } = useAuth();
+
+  // Check if this is a login from the extension
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source');
+    const extId = urlParams.get('extensionId');
+    
+    if (source === 'extension' && extId) {
+      setIsExtensionLogin(true);
+      setExtensionId(extId);
+      console.log('🔌 Extension login detected, ID:', extId);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,12 +32,42 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
     try {
       const data = await authService.login(email, password);
       login(data.token, data.user);
-      onNavigate('account');
+      
+      // If logging in from extension, redirect back to extension
+      if (isExtensionLogin && extensionId) {
+        redirectToExtension(data);
+      } else {
+        // Normal redirect to account page
+        onNavigate('account');
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const redirectToExtension = (authData: any) => {
+    const { token, user } = authData;
+    
+    // Build callback URL with all auth data
+    const params = new URLSearchParams({
+      token: token,
+      email: user.email,
+      name: user.name || '',
+      tier: user.tier || user.plan || 'free',
+      firstName: user.firstName || '',
+      lastName: user.lastName || ''
+    });
+
+    const callbackUrl = `chrome-extension://${extensionId}/auth-callback.html?${params.toString()}`;
+    
+    console.log('🚀 Redirecting to extension:', callbackUrl);
+    
+    // Small delay to show success message
+    setTimeout(() => {
+      window.location.href = callbackUrl;
+    }, 500);
   };
 
   return (
@@ -38,6 +83,12 @@ export const Login: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavi
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {isExtensionLogin && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg flex items-center gap-2">
+              <span>🔌</span>
+              <span>Logging in from CRMSYNC Extension</span>
+            </div>
+          )}
           {error && <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg">{error}</div>}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

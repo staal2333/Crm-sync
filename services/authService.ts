@@ -5,7 +5,10 @@ export interface User {
   email: string;
   name: string;
   plan?: string;
+  tier?: string;
   subscriptionStatus?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface AuthResponse {
