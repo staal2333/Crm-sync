@@ -11,6 +11,24 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
     return null;
   }
 
+  // Get tier from either 'tier' or 'plan' field
+  const userTier = user.tier || user.plan || 'free';
+  const displayTier = userTier.charAt(0).toUpperCase() + userTier.slice(1).toLowerCase();
+  
+  const getTierBadgeColor = (tier: string) => {
+    switch (tier.toLowerCase()) {
+      case 'pro':
+      case 'professional':
+        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white';
+      case 'business':
+        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white';
+      case 'enterprise':
+        return 'bg-gradient-to-r from-gray-800 to-gray-900 text-white';
+      default:
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,21 +68,35 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <span className="text-sm text-gray-500">Current Plan</span>
-                <div className="text-xl font-bold text-primary mt-1">
-                  {user.plan || 'Free Tier'}
+                <div className={`mt-2 px-4 py-2 rounded-lg text-center ${getTierBadgeColor(userTier)}`}>
+                  <div className="text-lg font-bold">
+                    {displayTier} {userTier.toLowerCase() !== 'free' ? 'Plan' : 'Tier'}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
+                <div className="text-xs text-gray-500 mt-2 text-center uppercase tracking-wide">
                   {user.subscriptionStatus || 'Active'}
                 </div>
               </div>
               
-              <Button 
-                variant="primary" 
-                className="w-full"
-                onClick={() => onNavigate('pricing')}
-              >
-                Upgrade Plan
-              </Button>
+              {userTier.toLowerCase() === 'free' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full"
+                  onClick={() => onNavigate('pricing')}
+                >
+                  Upgrade Plan
+                </Button>
+              )}
+              
+              {userTier.toLowerCase() !== 'free' && userTier.toLowerCase() !== 'enterprise' && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => onNavigate('pricing')}
+                >
+                  Manage Subscription
+                </Button>
+              )}
             </div>
           </div>
         </div>

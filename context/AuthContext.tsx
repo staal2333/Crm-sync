@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (token: string, user: User) => void;
   logout: () => void;
   updateUser: (user: User) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,8 +53,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(updatedUser);
   };
 
+  const refreshUser = async () => {
+    if (!token) {
+      throw new Error('No authentication token');
+    }
+    
+    try {
+      const userData = await authService.getProfile(token);
+      setUser(userData);
+    } catch (error) {
+      console.error('Failed to refresh user profile:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
