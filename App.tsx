@@ -15,7 +15,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#/', '');
+      let hash = window.location.hash.replace('#/', '');
+      
+      // Strip query parameters from hash (e.g., login?source=extension -> login)
+      const queryIndex = hash.indexOf('?');
+      if (queryIndex !== -1) {
+        hash = hash.substring(0, queryIndex);
+      }
+      
       if (!hash) {
         setPage('home');
       } else {
