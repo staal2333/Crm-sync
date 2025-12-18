@@ -41,7 +41,8 @@ export const Pricing: React.FC = () => {
 
     setLoadingTier(tierId);
     try {
-      const result = await createCheckoutSession(priceId);
+      // Pass the tier ID to the backend
+      const result = await createCheckoutSession(priceId, tierId);
       
       if (result?.url) {
         window.location.href = result.url;

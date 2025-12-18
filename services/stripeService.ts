@@ -14,7 +14,7 @@ interface CheckoutResponse {
   error?: string;
 }
 
-export const createCheckoutSession = async (priceId: string): Promise<CheckoutResponse | null> => {
+export const createCheckoutSession = async (priceId: string, tier?: string): Promise<CheckoutResponse | null> => {
   try {
     const token = localStorage.getItem('token');
     
@@ -31,6 +31,7 @@ export const createCheckoutSession = async (priceId: string): Promise<CheckoutRe
       headers,
       body: JSON.stringify({
         priceId: priceId,
+        tier: tier, // Pass tier to backend
         successUrl: `${window.location.origin}/#/success`,
         cancelUrl: `${window.location.origin}/#/pricing`,
       }),
