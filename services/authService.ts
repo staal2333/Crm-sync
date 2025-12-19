@@ -4,8 +4,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  displayName?: string;
   plan?: string;
   tier?: string;
+  subscriptionTier?: string; // Backend sends this field
   subscriptionStatus?: string;
   firstName?: string;
   lastName?: string;

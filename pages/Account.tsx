@@ -11,8 +11,8 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
     return null;
   }
 
-  // Get tier from either 'tier' or 'plan' field
-  const userTier = user.tier || user.plan || 'free';
+  // Get tier from any available field (backend sends subscriptionTier)
+  const userTier = user.subscriptionTier || user.tier || user.plan || 'free';
   const displayTier = userTier.charAt(0).toUpperCase() + userTier.slice(1).toLowerCase();
   
   const getTierBadgeColor = (tier: string) => {
