@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button, SectionHeader } from '../components/Shared';
 import { User, CreditCard, LogOut, Calendar, DollarSign } from 'lucide-react';
@@ -9,7 +9,45 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
   const [billingDetails, setBillingDetails] = useState<any>(null);
   const [loadingBilling, setLoadingBilling] = useState(false);
 
-  // Show loading while auth is initializing
+  // Get tier from user (must be before conditional returns to satisfy Rules of Hooks)
+  const userTier = user?.subscriptionTier || user?.tier || user?.plan || 'free';
+  const displayTier = userTier.charAt(0).toUpperCase() + userTier.slice(1).toLowerCase();
+  
+  // Memoized billing details loader
+  const loadBillingDetails = useCallback(async () => {
+    if (userTier.toLowerCase() === 'free') return; // Skip for free tier
+    
+    setLoadingBilling(true);
+    try {
+      const details = await getSubscriptionDetails();
+      setBillingDetails(details);
+    } catch (error) {
+      console.error('Failed to load billing details:', error);
+    } finally {
+      setLoadingBilling(false);
+    }
+  }, [userTier]); // Only re-create if userTier changes
+  
+  // Load billing details on mount (for paid tiers only)
+  useEffect(() => {
+    if (user && userTier.toLowerCase() !== 'free') {
+      loadBillingDetails();
+    }
+  }, [user, userTier, loadBillingDetails]);
+  
+  const handleManageBilling = async () => {
+    try {
+      const result = await createPortalSession();
+      if (result?.url) {
+        window.open(result.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to open billing portal:', error);
+      alert('Unable to open billing portal. Please try again.');
+    }
+  };
+
+  // Show loading while auth is initializing (after all hooks!)
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -26,41 +64,6 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
     onNavigate('login');
     return null;
   }
-
-  // Get tier from any available field (backend sends subscriptionTier)
-  const userTier = user.subscriptionTier || user.tier || user.plan || 'free';
-  const displayTier = userTier.charAt(0).toUpperCase() + userTier.slice(1).toLowerCase();
-  
-  // Load billing details on mount
-  useEffect(() => {
-    if (userTier.toLowerCase() !== 'free') {
-      loadBillingDetails();
-    }
-  }, [userTier]);
-  
-  const loadBillingDetails = async () => {
-    setLoadingBilling(true);
-    try {
-      const details = await getSubscriptionDetails();
-      setBillingDetails(details);
-    } catch (error) {
-      console.error('Failed to load billing details:', error);
-    } finally {
-      setLoadingBilling(false);
-    }
-  };
-  
-  const handleManageBilling = async () => {
-    try {
-      const result = await createPortalSession();
-      if (result?.url) {
-        window.open(result.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Failed to open billing portal:', error);
-      alert('Unable to open billing portal. Please try again.');
-    }
-  };
   
   const getTierBadgeColor = (tier: string) => {
     switch (tier.toLowerCase()) {
