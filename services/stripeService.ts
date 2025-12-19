@@ -85,3 +85,73 @@ export const createCheckoutSession = async (priceId: string, tier?: string): Pro
     return { url: window.location.origin + '/#/success' };
   }
 };
+
+// Get detailed subscription information including billing
+export const getSubscriptionDetails = async (): Promise<any> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_URL}/api/subscription/details`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch subscription details');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching subscription details:', error);
+    return null;
+  }
+};
+
+// Get invoice history
+export const getInvoices = async (): Promise<any> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_URL}/api/subscription/invoices`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch invoices');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    return { invoices: [] };
+  }
+};
+
+// Create Stripe Customer Portal session
+export const createPortalSession = async (): Promise<{ url: string } | null> => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_URL}/api/subscription/create-portal`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create portal session');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating portal session:', error);
+    return null;
+  }
+};

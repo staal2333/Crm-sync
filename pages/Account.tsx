@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button, SectionHeader } from '../components/Shared';
-import { User, CreditCard, LogOut } from 'lucide-react';
+import { User, CreditCard, LogOut, Calendar, DollarSign } from 'lucide-react';
+import { getSubscriptionDetails, createPortalSession } from '../services/stripeService';
 
 export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
   const { user, logout } = useAuth();
+  const [billingDetails, setBillingDetails] = useState<any>(null);
+  const [loadingBilling, setLoadingBilling] = useState(false);
 
   if (!user) {
     onNavigate('login');
@@ -14,6 +17,37 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
   // Get tier from any available field (backend sends subscriptionTier)
   const userTier = user.subscriptionTier || user.tier || user.plan || 'free';
   const displayTier = userTier.charAt(0).toUpperCase() + userTier.slice(1).toLowerCase();
+  
+  // Load billing details on mount
+  useEffect(() => {
+    if (userTier.toLowerCase() !== 'free') {
+      loadBillingDetails();
+    }
+  }, [userTier]);
+  
+  const loadBillingDetails = async () => {
+    setLoadingBilling(true);
+    try {
+      const details = await getSubscriptionDetails();
+      setBillingDetails(details);
+    } catch (error) {
+      console.error('Failed to load billing details:', error);
+    } finally {
+      setLoadingBilling(false);
+    }
+  };
+  
+  const handleManageBilling = async () => {
+    try {
+      const result = await createPortalSession();
+      if (result?.url) {
+        window.open(result.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to open billing portal:', error);
+      alert('Unable to open billing portal. Please try again.');
+    }
+  };
   
   const getTierBadgeColor = (tier: string) => {
     switch (tier.toLowerCase()) {
@@ -78,6 +112,66 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
                 </div>
               </div>
               
+              {/* Billing Details for Paid Plans */}
+              {userTier.toLowerCase() !== 'free' && billingDetails?.subscription && (
+                <div className="space-y-3 pt-2 border-t border-gray-200">
+                  {/* Billing Period */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Billing</span>
+                    <span className="text-sm font-medium">
+                      {billingDetails.subscription.interval === 'month' ? 'Monthly' : 'Yearly'}
+                    </span>
+                  </div>
+                  
+                  {/* Price */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500 flex items-center">
+                      <DollarSign className="w-3 h-3" />
+                      Price
+                    </span>
+                    <span className="text-sm font-medium">
+                      ${billingDetails.subscription.amount.toFixed(2)}/{billingDetails.subscription.interval}
+                    </span>
+                  </div>
+                  
+                  {/* Next Billing Date */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500 flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Next Bill
+                    </span>
+                    <span className="text-sm font-medium">
+                      {new Date(billingDetails.subscription.currentPeriodEnd).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  {/* Payment Method */}
+                  {billingDetails.paymentMethod && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Card</span>
+                      <span className="text-sm font-medium">
+                        {billingDetails.paymentMethod.brand.toUpperCase()} •••• {billingDetails.paymentMethod.last4}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Trial Warning */}
+                  {billingDetails.subscription.trialEnd && new Date(billingDetails.subscription.trialEnd) > new Date() && (
+                    <div className="bg-blue-50 p-2 rounded text-xs text-blue-700">
+                      🎉 Trial ends {new Date(billingDetails.subscription.trialEnd).toLocaleDateString()}
+                    </div>
+                  )}
+                  
+                  {/* Cancel Warning */}
+                  {billingDetails.subscription.cancelAtPeriodEnd && (
+                    <div className="bg-yellow-50 p-2 rounded text-xs text-yellow-700">
+                      ⚠️ Cancels {new Date(billingDetails.subscription.currentPeriodEnd).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Action Buttons */}
               {userTier.toLowerCase() === 'free' && (
                 <Button 
                   variant="primary" 
@@ -88,14 +182,20 @@ export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNa
                 </Button>
               )}
               
-              {userTier.toLowerCase() !== 'free' && userTier.toLowerCase() !== 'enterprise' && (
+              {userTier.toLowerCase() !== 'free' && (
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => onNavigate('pricing')}
+                  onClick={handleManageBilling}
                 >
-                  Manage Subscription
+                  Manage Billing
                 </Button>
+              )}
+              
+              {loadingBilling && (
+                <div className="text-xs text-center text-gray-400">
+                  Loading billing info...
+                </div>
               )}
             </div>
           </div>
