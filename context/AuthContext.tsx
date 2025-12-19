@@ -21,15 +21,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      console.log('🔐 AuthContext: Initializing auth, token exists:', !!storedToken);
+      
       if (storedToken) {
         try {
+          console.log('🔄 AuthContext: Fetching user profile...');
           const userData = await authService.getProfile(storedToken);
+          console.log('✅ AuthContext: User profile loaded:', userData.email);
           setUser(userData);
           setToken(storedToken);
-        } catch (error) {
-          console.error("Session expired or invalid:", error);
-          logout();
+          // Update stored user with fresh data
+          localStorage.setItem('user', JSON.stringify(userData));
+        } catch (error: any) {
+          console.error("❌ AuthContext: Failed to load profile:", error);
+          
+          // Only logout if it's a 401 (unauthorized)
+          if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+            console.log('🔓 AuthContext: Token invalid, logging out');
+            logout();
+          } else {
+            // For network errors, use cached user data if available
+            if (storedUser) {
+              try {
+                const cachedUser = JSON.parse(storedUser);
+                console.log('💾 AuthContext: Using cached user data:', cachedUser.email);
+                setUser(cachedUser);
+                setToken(storedToken);
+              } catch (parseError) {
+                console.error('Failed to parse cached user:', parseError);
+                setToken(storedToken);
+              }
+            } else {
+              console.log('⚠️ AuthContext: Network error, no cached user, keeping token for retry');
+              setToken(storedToken);
+            }
+          }
         }
+      } else {
+        console.log('📝 AuthContext: No token found, user not logged in');
       }
       setIsLoading(false);
     };
@@ -39,14 +69,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (newToken: string, newUser: User) => {
     localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(newUser)); // Store user as backup
     setToken(newToken);
     setUser(newUser);
+    console.log('✅ AuthContext: User logged in and stored:', newUser.email);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    console.log('🔓 AuthContext: User logged out');
   };
 
   const updateUser = (updatedUser: User) => {

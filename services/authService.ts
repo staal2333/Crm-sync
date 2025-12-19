@@ -50,19 +50,32 @@ export const authService = {
   },
 
   async getProfile(token: string): Promise<User> {
-    const res = await fetch(`${API_URL}/api/auth/me`, {
-      method: 'GET',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
-      },
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        },
+      });
 
-    if (!res.ok) {
-      throw new Error('Failed to fetch profile');
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('401 Unauthorized - Token invalid or expired');
+        }
+        throw new Error(`Failed to fetch profile: ${res.status}`);
+      }
+
+      const data = await res.json();
+      return data.user || data;
+    } catch (error: any) {
+      // Distinguish between network errors and auth errors
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        throw error; // Re-throw auth errors
+      }
+      // For network errors, provide more context
+      console.error('Network error fetching profile:', error);
+      throw new Error(`Network error: ${error.message}`);
     }
-
-    const data = await res.json();
-    return data.user || data;
   }
 };
