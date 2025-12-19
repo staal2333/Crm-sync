@@ -5,10 +5,23 @@ import { User, CreditCard, LogOut, Calendar, DollarSign } from 'lucide-react';
 import { getSubscriptionDetails, createPortalSession } from '../services/stripeService';
 
 export const Account: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const [billingDetails, setBillingDetails] = useState<any>(null);
   const [loadingBilling, setLoadingBilling] = useState(false);
 
+  // Show loading while auth is initializing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only redirect to login after loading is complete and user is not found
   if (!user) {
     onNavigate('login');
     return null;
